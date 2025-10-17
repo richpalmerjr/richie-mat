@@ -22,12 +22,21 @@
       {
         "command": "richie-mat.refactorCallSub",
         "title": "Refactor CallSubs"
+      },
+      {
+        "command": "richie-mat.renameCodeVariables",
+        "title": "Rename Variables"
       }
     ],
     "keybindings": [
       {
         "command": "richie-mat.refactorCallSub",
         "key": "ctrl+alt+c",
+        "when": "editorTextFocus"
+      },
+      {
+        "command": "richie-mat.renameCodeVariables",
+        "key": "ctrl+alt+x",
         "when": "editorTextFocus"
       }
     ],
@@ -52,6 +61,10 @@
         },
         {
           "command": "richie-mat.refactorCallSub",
+          "group": "z_actions@1"
+        },
+        {
+          "command": "richie-mat.renameCodeVariables",
           "group": "z_actions@1"
         }
       ]
