@@ -27,31 +27,7 @@ function activate(context) {
   const disposableRefactorCallSubs = vscode.commands.registerCommand(
     "richie-mat.refactorCallSub",
     function () {
-      const editor = vscode.window.activeTextEditor;
-      if (editor) {
-
-        // Get the currently selected text.
-        const selection = editor.selection;
-        let selectedText = editor.document.getText(selection);
-
-        // --- Perform the Transformations ---
-
-        // 1. Replace all instances of @CallSub
-        const callSubRegex = /@CallSub\((.*?)\)/g;
-        selectedText = selectedText.replace(callSubRegex, "@@$1()");
-
-        // 2. Replace all instances of @CallExternalSub
-        const callExtRegex = /@CallExternalSub\(([^,]*),([^,]*),([^,]*)\)/g;
-        selectedText = selectedText.replace(callExtRegex, "@@$2:$3()");
-
-		// 3. Apply the edits to the editor
-        editor.edit(editBuilder => {
-                editBuilder.replace(selection, selectedText);
-            });
-
-		vscode.window.showInformationMessage("Refactoring complete!");
-
-      }
+      refactorCallSub();
     }
   );
   context.subscriptions.push(disposableHelloWorld);
@@ -60,6 +36,32 @@ function activate(context) {
 
 // This method is called when your extension is deactivated
 function deactivate() {}
+
+function refactorCallSub() {
+  const editor = vscode.window.activeTextEditor;
+  if (editor) {
+    // Get the currently selected text.
+    const selection = editor.selection;
+    let selectedText = editor.document.getText(selection);
+
+    // --- Perform the Transformations ---
+
+    // 1. Replace all instances of @CallSub
+    const callSubRegex = /@CallSub\((.*?)\)/g;
+    selectedText = selectedText.replace(callSubRegex, "@@$1()");
+
+    // 2. Replace all instances of @CallExternalSub
+    const callExtRegex = /@CallExternalSub\(([^,]*),([^,]*),([^\)]*)\)/g;
+    selectedText = selectedText.replace(callExtRegex, "@@$2:$3()");
+
+    // 3. Apply the edits to the editor
+    editor.edit((editBuilder) => {
+      editBuilder.replace(selection, selectedText);
+    });
+
+    vscode.window.showInformationMessage("Refactoring complete!");
+  }
+}
 
 module.exports = {
   activate,
