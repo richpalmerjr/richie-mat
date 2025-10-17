@@ -2,6 +2,12 @@
 
 My own personal Visual Studio Code extension for refactoring and utility functions related to my MAT (Medical Abstracting Tool) development environment.
 
+## To Create Extension Package
+
+run this command in the VS Code Terminal:
+
+    npx vsce package
+
 ## Features
 
 This extension provides custom commands designed to streamline common refactoring tasks in MAT files.
@@ -12,6 +18,9 @@ Quickly refactor legacy MAT subroutine calls to the modern format. This command 
 
 * **`@CallSub(SubName)`** is refactored to **`@@SubName()`**
 * **`@CallExternalSub(File, SubName, Arguments)`** is refactored to **`@@SubName:Arguments()`**
+
+### Rename Variables
+Quickly rename single letter variables to modern format within the highlighted code. Will also add var: line with newly named variables. Ideally, the :Code line should not be selected in order to have the variable declaration to the correct place in the code. If :Code is highlighted, then the declaration will be added above the :Code line
 
 ## Requirements
 
