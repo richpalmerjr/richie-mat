@@ -43,11 +43,16 @@
           "command": "richie-mat.helloWorld",
           "group": "z_actions@1"
         },
-        {"command": "richie-mat.refactorCallSub",
-        "group": "z_actions@1"
-      }
+        {
+          "command": "richie-mat.refactorCallSub",
+          "group": "z_actions@1"
+        }
       ]
     }
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/richpalmerjr/richie-mat.git"
   },
   "scripts": {
     "lint": "eslint .",
@@ -55,11 +60,14 @@
     "test": "vscode-test"
   },
   "devDependencies": {
-    "@types/vscode": "^1.105.0",
     "@types/mocha": "^10.0.10",
     "@types/node": "22.x",
-    "eslint": "^9.36.0",
+    "@types/vscode": "^1.105.0",
     "@vscode/test-cli": "^0.0.11",
-    "@vscode/test-electron": "^2.5.2"
+    "@vscode/test-electron": "^2.5.2",
+    "eslint": "^9.36.0"
+  },
+  "dependencies": {
+    "vsce": "^2.15.0"
   }
 }

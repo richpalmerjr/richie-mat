@@ -1,65 +1,51 @@
-# richie-mat README
+# Richie-Mat Tools
 
-This is the README for your extension "richie-mat". After writing up a brief description, we recommend including the following sections.
+My own personal Visual Studio Code extension for refactoring and utility functions related to my MAT (Medical Abstracting Tool) development environment.
 
 ## Features
 
-Describe specific features of your extension including screenshots of your extension in action. Image paths are relative to this README file.
+This extension provides custom commands designed to streamline common refactoring tasks in MAT files.
 
-For example if there is an image subfolder under your extension project workspace:
+### Refactor Call Subroutines
 
-\!\[feature X\]\(images/feature-x.png\)
+Quickly refactor legacy MAT subroutine calls to the modern format. This command performs the following transformations on selected text:
 
-> Tip: Many popular extensions utilize animations. This is an excellent way to show off your extension! We recommend short, focused animations that are easy to follow.
+* **`@CallSub(SubName)`** is refactored to **`@@SubName()`**
+* **`@CallExternalSub(File, SubName, Arguments)`** is refactored to **`@@SubName:Arguments()`**
 
 ## Requirements
 
-If you have any requirements or dependencies, add a section describing those and how to install and configure them.
+This extension assumes a workspace setup for MAT development. It is primarily intended for use on files with the `.focus` extension, as configured in the context menus.
 
-## Extension Settings
+## Usage
 
-Include if your extension adds any VS Code settings through the `contributes.configuration` extension point.
+This extension is designed to be used via the **Context Menu (right-click)** inside a file editor.
 
-For example:
+1.  Open any `.focus` file.
+2.  Select the text you want to refactor (e.g., a block of code containing `@CallSub` or `@CallExternalSub`).
+3.  Right-click on the selection.
+4.  Navigate to the **Richie Tools** submenu (or whatever you named your custom menu).
+5.  Click on the **Refactor Call Sub** command.
 
-This extension contributes the following settings:
+The selected text will be updated instantly with the refactored syntax.
 
-* `myExtension.enable`: Enable/disable this extension.
-* `myExtension.thing`: Set to `blah` to do something.
+## Installation
 
-## Known Issues
+Since this is a personal tool, you install it manually using the VSIX file.
 
-Calling out known issues can help limit users opening duplicate issues against your extension.
+1.  Download the latest `richie-mat-x.x.x.vsix` file.
+2.  Open VS Code.
+3.  Go to the Extensions View (Ctrl+Shift+X).
+4.  Click the **`...`** (More Actions) menu.
+5.  Select **`Install from VSIX...`** and choose the downloaded file.
 
 ## Release Notes
 
-Users appreciate release notes as you update your extension.
+### 0.0.1
 
-### 1.0.0
-
-Initial release of ...
-
-### 1.0.1
-
-Fixed issue #.
-
-### 1.1.0
-
-Added features X, Y, and Z.
+Initial release of Richie-Mat Tools.
+* Added `richie-mat.refactorCallSub` command for modernizing subroutine calls.
 
 ---
 
-## Working with Markdown
-
-You can author your README using Visual Studio Code.  Here are some useful editor keyboard shortcuts:
-
-* Split the editor (`Cmd+\` on macOS or `Ctrl+\` on Windows and Linux)
-* Toggle preview (`Shift+Cmd+V` on macOS or `Shift+Ctrl+V` on Windows and Linux)
-* Press `Ctrl+Space` (Windows, Linux, macOS) to see a list of Markdown snippets
-
-## For more information
-
-* [Visual Studio Code's Markdown Support](http://code.visualstudio.com/docs/languages/markdown)
-* [Markdown Syntax Reference](https://help.github.com/articles/markdown-basics/)
-
-**Enjoy!**
+**Developed by:** Richie Palmer Jr.
