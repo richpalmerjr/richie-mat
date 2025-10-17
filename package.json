@@ -24,6 +24,13 @@
         "title": "Refactor CallSubs"
       }
     ],
+    "keybindings": [
+      {
+        "command": "richie-mat.refactorCallSub",
+        "key": "ctrl+alt+c",
+        "when": "editorTextFocus"
+      }
+    ],
     "submenus": [
       {
         "id": "richie-mat.toolsSubmenu",
