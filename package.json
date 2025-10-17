@@ -1,0 +1,65 @@
+{
+  "name": "richie-mat",
+  "displayName": "richie-mat",
+  "description": "My own personal MAT extensions",
+  "version": "0.0.1",
+  "engines": {
+    "vscode": "^1.105.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [
+    "richie-mat.helloWorld"
+  ],
+  "main": "./extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "richie-mat.helloWorld",
+        "title": "Hello World"
+      },
+      {
+        "command": "richie-mat.refactorCallSub",
+        "title": "Refactor CallSubs"
+      }
+    ],
+    "submenus": [
+      {
+        "id": "richie-mat.toolsSubmenu",
+        "label": "Richie Tools"
+      }
+    ],
+    "menus": {
+      "editor/context": [
+        {
+          "submenu": "richie-mat.toolsSubmenu",
+          "when": "resourceExtname == .focus",
+          "group": "9_my_custom_tools"
+        }
+      ],
+      "richie-mat.toolsSubmenu": [
+        {
+          "command": "richie-mat.helloWorld",
+          "group": "z_actions@1"
+        },
+        {"command": "richie-mat.refactorCallSub",
+        "group": "z_actions@1"
+      }
+      ]
+    }
+  },
+  "scripts": {
+    "lint": "eslint .",
+    "pretest": "npm run lint",
+    "test": "vscode-test"
+  },
+  "devDependencies": {
+    "@types/vscode": "^1.105.0",
+    "@types/mocha": "^10.0.10",
+    "@types/node": "22.x",
+    "eslint": "^9.36.0",
+    "@vscode/test-cli": "^0.0.11",
+    "@vscode/test-electron": "^2.5.2"
+  }
+}
