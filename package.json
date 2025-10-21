@@ -9,16 +9,10 @@
   "categories": [
     "Other"
   ],
-  "activationEvents": [
-    "richie-mat.helloWorld"
-  ],
+  "activationEvents": [],
   "main": "./extension.js",
   "contributes": {
     "commands": [
-      {
-        "command": "richie-mat.helloWorld",
-        "title": "Hello World"
-      },
       {
         "command": "richie-mat.refactorCallSub",
         "title": "Refactor CallSubs"
@@ -26,6 +20,10 @@
       {
         "command": "richie-mat.renameCodeVariables",
         "title": "Rename Variables"
+      },
+      {
+        "command": "richie-mat.addBreak",
+        "title": "Add Break"
       }
     ],
     "keybindings": [
@@ -37,6 +35,11 @@
       {
         "command": "richie-mat.renameCodeVariables",
         "key": "ctrl+alt+x",
+        "when": "editorTextFocus"
+      },
+      {
+        "command": "richie-mat.addBreak",
+        "key": "F8",
         "when": "editorTextFocus"
       }
     ],
@@ -56,15 +59,15 @@
       ],
       "richie-mat.toolsSubmenu": [
         {
-          "command": "richie-mat.helloWorld",
-          "group": "z_actions@1"
-        },
-        {
           "command": "richie-mat.refactorCallSub",
           "group": "z_actions@1"
         },
         {
           "command": "richie-mat.renameCodeVariables",
+          "group": "z_actions@1"
+        },
+        {
+          "command": "richie-mat.addBreak",
           "group": "z_actions@1"
         }
       ]

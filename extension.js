@@ -103,13 +103,6 @@ function activate(context) {
   // The command has been defined in the package.json file
   // Now provide the implementation of the command with  registerCommand
   // The commandId parameter must match the command field in package.json
-  const disposableHelloWorld = vscode.commands.registerCommand(
-    "richie-mat.helloWorld",
-    function () {
-      // Display a message box to the user
-      vscode.window.showInformationMessage("Hello World from richie-mat!");
-    }
-  );
 
   const disposableRefactorCallSubs = vscode.commands.registerCommand(
     "richie-mat.refactorCallSub",
@@ -121,9 +114,14 @@ function activate(context) {
     renameVariables
   );
 
+  const addBreak = vscode.commands.registerCommand(
+    "richie-mat.addBreak",
+    addBreakInSpot
+  );
+
   context.subscriptions.push(disposableRenameVars);
-  context.subscriptions.push(disposableHelloWorld);
   context.subscriptions.push(disposableRefactorCallSubs);
+  context.subscriptions.push(addBreak);
 }
 
 // This method is called when your extension is deactivated
@@ -156,101 +154,171 @@ function refactorCallSub() {
 }
 
 async function renameVariables() {
+  const vscode = require("vscode");
+  const editor = vscode.window.activeTextEditor;
+  if (!editor) return;
+
+  const selection = editor.selection;
+  let codeInput = editor.document.getText(selection);
+  let singleInputVariables = [];
+
+  if (!codeInput) {
+    return vscode.window.showInformationMessage(
+      "Please select code to rename variables"
+    );
+  }
+
+  // 1. MASK STRINGS
+  let maskedCodeInput = maskStrings(codeInput);
+
+  // --- 2. Variable Discovery ---
+  const linesOfCode = maskedCodeInput.split("\n");
+  const commentRegex = /^\s*\/\//;
+
+  for (let line of linesOfCode) {
+    if (commentRegex.test(line)) {
+      continue;
+    }
+
+    const strippedString = storeSpecialCharacters(line);
+    const splitStrippedString = strippedString.split(" ");
+
+    for (let word of splitStrippedString) {
+      if (isVariable(word) && !singleInputVariables.includes(word)) {
+        singleInputVariables.push(word);
+      }
+    }
+  }
+
+  if (singleInputVariables.length === 0) {
+    return vscode.window.showInformationMessage(
+      "No single letter variables found in selected code"
+    );
+  }
+
+  // --- 3. Get User Input (Prompts) ---
+  const updatedValues = await promptForVariables(singleInputVariables);
+
+  if (!updatedValues) {
+    return vscode.window.showInformationMessage("Variable renaming cancelled");
+  }
+
+  // --- 4. Apply Renaming Transformation ---
+  let finalCodeOutput = maskedCodeInput;
+  let newVariableNames = []; // Array to hold the NEW variable names
+
+  for (const oldVar in updatedValues) {
+    const newVar = updatedValues[oldVar];
+
+    // Add the new variable name to our list
+    newVariableNames.push(newVar);
+
+    // Perform the renaming on the masked code
+    const variableRegex = new RegExp(`\\b${oldVar}\\b`, "g");
+    finalCodeOutput = finalCodeOutput.replace(variableRegex, newVar);
+  }
+
+  // --- 5. Generate and Insert the 'var:' Line (NEW LOGIC) ---
+
+  // Sort the new variable names alphabetically for clean output
+  newVariableNames.sort();
+
+  // Create the 'var: VAR1 VAR2 ...' line
+  const varLine = "var: " + newVariableNames.join(" ");
+
+  // Find the end of the leading comments/documentation block for insertion
+  const lines = finalCodeOutput.split("\n");
+  let insertionIndex = -1;
+
+  // Find the first line that is NOT a comment and NOT empty.
+  for (let i = 0; i < lines.length; i++) {
+    if (!commentRegex.test(lines[i]) && lines[i].trim() !== "") {
+      insertionIndex = i;
+      break;
+    }
+  }
+
+  // If the insertion point is found (i.e., not an empty selection), insert the line
+  if (insertionIndex !== -1) {
+    lines.splice(insertionIndex, 0, varLine); // Insert varLine and an empty line after it
+    finalCodeOutput = lines.join("\n");
+  }
+
+  // --- 6. UNMASK STRINGS ---
+  finalCodeOutput = unmaskStrings(finalCodeOutput);
+
+  // --- 7. Apply Edits to Editor ---
+  editor.edit((editBuilder) => {
+    editBuilder.replace(selection, finalCodeOutput);
+  });
+
+  vscode.window.showInformationMessage(
+    `Renamed ${newVariableNames.length} variables!`
+  );
+}
+
+async function addBreakInSpot() {
     const vscode = require('vscode');
     const editor = vscode.window.activeTextEditor;
-    if (!editor) return;
 
-    const selection = editor.selection;
-    let codeInput = editor.document.getText(selection);
-    let singleInputVariables = []; 
-
-    if (!codeInput) {
-        return vscode.window.showInformationMessage('Please select code to rename variables');
+    // 1. If no editor is active, exit immediately.
+    if (!editor) {
+        vscode.window.showWarningMessage("Please open a file to insert a breakpoint.");
+        return; 
     }
     
-    // 1. MASK STRINGS
-    let maskedCodeInput = maskStrings(codeInput); 
-
-    // --- 2. Variable Discovery ---
-    const linesOfCode = maskedCodeInput.split('\n');
-    const commentRegex = /^\s*\/\//;
+    // Get the current cursor position.
+    const cursorPosition = editor.selection.active;
     
-    for (let line of linesOfCode) {
-        if (commentRegex.test(line)) {
-            continue; 
-        }
+    // 2. Get all text BEFORE the cursor.
+    const rangeBefore = new vscode.Range(
+        new vscode.Position(0, 0),
+        cursorPosition
+    );
+    const textBeforeCursor = editor.document.getText(rangeBefore);
 
-        const  strippedString = storeSpecialCharacters(line); 
-        const splitStrippedString = (strippedString).split(' ');
+    // 3. Find the nearest preceding Code Member name.
+    // The 'g' (global) flag is fine, but we need to ensure the LAST match is retrieved.
+    const nameRegex = /^:Code\s+(\w+)/gm; 
+    let nameMatches = textBeforeCursor.match(nameRegex);
 
-        for (let word of splitStrippedString) {
-            if (isVariable(word) && !singleInputVariables.includes(word)) {
-                singleInputVariables.push(word);
-            }
-        }
+    let codeMemberName = "";
+    if (nameMatches && nameMatches.length > 0) {
+        // Take the LAST match (the nearest one above the cursor).
+        const lastMatch = nameMatches[nameMatches.length - 1];
+        // Extract the name: match[1] in the regex is the name itself.
+        // We use split here, as that was your original logic for extracting the name:
+        codeMemberName = lastMatch.split(/\s+/)[1];
     }
 
-    if (singleInputVariables.length === 0) {
-        return vscode.window.showInformationMessage('No single letter variables found in selected code');
-    }
+    let breakString = `@Break(${codeMemberName || "${1:Name}"})`;
     
-    // --- 3. Get User Input (Prompts) ---
-    const updatedValues = await promptForVariables(singleInputVariables);
-    
-    if (!updatedValues) {
-        return vscode.window.showInformationMessage('Variable renaming cancelled');
-    }
-    
-    // --- 4. Apply Renaming Transformation ---
-    let finalCodeOutput = maskedCodeInput; 
-    let newVariableNames = []; // Array to hold the NEW variable names
-
-    for (const oldVar in updatedValues) {
-        const newVar = updatedValues[oldVar];
+    if (codeMemberName) {
+        // 4. Search the ENTIRE document to count existing breaks for numbering.
+        const fullText = editor.document.getText();
         
-        // Add the new variable name to our list
-        newVariableNames.push(newVar);
+        // Find breaks specific to this Code Member: @Break(Name-XX)
+        // We capture the number group (XX)
+        const breakCounterRegex = new RegExp(
+            `@Break\\(${codeMemberName}-(\\d+)\\)`,
+            "g"
+        );
+        const breakMatches = fullText.match(breakCounterRegex);
 
-        // Perform the renaming on the masked code
-        const variableRegex = new RegExp(`\\b${oldVar}\\b`, 'g');
-        finalCodeOutput = finalCodeOutput.replace(variableRegex, newVar);
-    }
+        // 5. Calculate the next number.
+        // We need the number of matches found + 1.
+        const count = breakMatches ? breakMatches.length : 0;
+        const nextNumber = String(count + 1).padStart(2, "0"); // Formats "1" as "01"
 
-    // --- 5. Generate and Insert the 'var:' Line (NEW LOGIC) ---
+        // 6. Build the final string.
+        breakString = `@Break(${codeMemberName}-${nextNumber})`;
+    } 
     
-    // Sort the new variable names alphabetically for clean output
-    newVariableNames.sort();
-    
-    // Create the 'var: VAR1 VAR2 ...' line
-    const varLine = "var: " + newVariableNames.join(" ");
-    
-    // Find the end of the leading comments/documentation block for insertion
-    const lines = finalCodeOutput.split('\n');
-    let insertionIndex = -1;
-
-    // Find the first line that is NOT a comment and NOT empty.
-    for (let i = 0; i < lines.length; i++) {
-        if (!commentRegex.test(lines[i]) && lines[i].trim() !== '') {
-            insertionIndex = i;
-            break;
-        }
-    }
-
-    // If the insertion point is found (i.e., not an empty selection), insert the line
-    if (insertionIndex !== -1) {
-        lines.splice(insertionIndex, 0, varLine); // Insert varLine and an empty line after it
-        finalCodeOutput = lines.join('\n');
-    }
-    
-    // --- 6. UNMASK STRINGS ---
-    finalCodeOutput = unmaskStrings(finalCodeOutput); 
-
-    // --- 7. Apply Edits to Editor ---
+    // --- 7. Perform the Insertion ---
+    // Use editBuilder.insert() to add the string at the cursor position.
     editor.edit(editBuilder => {
-        editBuilder.replace(selection, finalCodeOutput);
+        editBuilder.insert(cursorPosition, breakString);
     });
-
-    vscode.window.showInformationMessage(`Renamed ${newVariableNames.length} variables!`);
 }
 
 module.exports = {

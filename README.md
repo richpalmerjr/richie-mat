@@ -22,6 +22,9 @@ Quickly refactor legacy MAT subroutine calls to the modern format. This command 
 ### Rename Variables
 Quickly rename single letter variables to modern format within the highlighted code. Will also add var: line with newly named variables. Ideally, the :Code line should not be selected in order to have the variable declaration to the correct place in the code. If :Code is highlighted, then the declaration will be added above the :Code line
 
+### Add a Break
+Quickly add a break in the position where the cursor is. The name of the Break will be automatically named with the code member name and a number (-01, -02, etc)
+
 ## Requirements
 
 This extension assumes a workspace setup for MAT development. It is primarily intended for use on files with the `.focus` extension, as configured in the context menus.
