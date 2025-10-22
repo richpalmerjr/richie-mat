@@ -1,8 +1,8 @@
 {
   "name": "richie-mat",
   "displayName": "richie-mat",
-  "description": "My own personal MAT extensions",
-  "version": "0.0.1",
+  "description": "Richie's MAT Extensions",
+  "version": "1.0.0",
   "engines": {
     "vscode": "^1.105.0"
   },
