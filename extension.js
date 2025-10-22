@@ -291,7 +291,7 @@ async function addBreakInSpot() {
         codeMemberName = lastMatch.split(/\s+/)[1];
     }
 
-    let breakString = `@Break(${codeMemberName || "${1:Name}"})`;
+    let breakString = `@Break(${codeMemberName || ""})`;
     
     if (codeMemberName) {
         // 4. Search the ENTIRE document to count existing breaks for numbering.
