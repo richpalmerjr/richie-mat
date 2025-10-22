@@ -24,6 +24,10 @@
       {
         "command": "richie-mat.addBreak",
         "title": "Add Break"
+      },
+      {
+        "command": "richie-mat.removeBreaks",
+        "title": "Remove All Breaks"
       }
     ],
     "keybindings": [
@@ -40,6 +44,11 @@
       {
         "command": "richie-mat.addBreak",
         "key": "F8",
+        "when": "editorTextFocus"
+      },
+      {
+        "command": "richie-mat.removeBreaks",
+        "key": "alt+F8",
         "when": "editorTextFocus"
       }
     ],
@@ -68,6 +77,10 @@
         },
         {
           "command": "richie-mat.addBreak",
+          "group": "z_actions@1"
+        },
+        {
+          "command": "richie-mat.removeBreaks",
           "group": "z_actions@1"
         }
       ]

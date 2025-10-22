@@ -119,9 +119,15 @@ function activate(context) {
     addBreakInSpot
   );
 
+  const removeBreaks = vscode.commands.registerCommand(
+    "richie-mat.removeBreaks",
+    removeAllBreaks
+  );
+
   context.subscriptions.push(disposableRenameVars);
   context.subscriptions.push(disposableRefactorCallSubs);
   context.subscriptions.push(addBreak);
+  context.subscriptions.push(removeBreaks);
 }
 
 // This method is called when your extension is deactivated
@@ -258,67 +264,110 @@ async function renameVariables() {
 }
 
 async function addBreakInSpot() {
-    const vscode = require('vscode');
-    const editor = vscode.window.activeTextEditor;
+  const vscode = require("vscode");
+  const editor = vscode.window.activeTextEditor;
 
-    // 1. If no editor is active, exit immediately.
-    if (!editor) {
-        vscode.window.showWarningMessage("Please open a file to insert a breakpoint.");
-        return; 
-    }
-    
-    // Get the current cursor position.
-    const cursorPosition = editor.selection.active;
-    
-    // 2. Get all text BEFORE the cursor.
-    const rangeBefore = new vscode.Range(
-        new vscode.Position(0, 0),
-        cursorPosition
+  // 1. If no editor is active, exit immediately.
+  if (!editor) {
+    vscode.window.showWarningMessage(
+      "Please open a file to insert a breakpoint."
     );
-    const textBeforeCursor = editor.document.getText(rangeBefore);
+    return;
+  }
 
-    // 3. Find the nearest preceding Code Member name.
-    // The 'g' (global) flag is fine, but we need to ensure the LAST match is retrieved.
-    const nameRegex = /^:Code\s+(\w+)/gm; 
-    let nameMatches = textBeforeCursor.match(nameRegex);
+  // Get the current cursor position.
+  const cursorPosition = editor.selection.active;
 
-    let codeMemberName = "";
-    if (nameMatches && nameMatches.length > 0) {
-        // Take the LAST match (the nearest one above the cursor).
-        const lastMatch = nameMatches[nameMatches.length - 1];
-        // Extract the name: match[1] in the regex is the name itself.
-        // We use split here, as that was your original logic for extracting the name:
-        codeMemberName = lastMatch.split(/\s+/)[1];
-    }
+  // 2. Get all text BEFORE the cursor.
+  const rangeBefore = new vscode.Range(
+    new vscode.Position(0, 0),
+    cursorPosition
+  );
+  const textBeforeCursor = editor.document.getText(rangeBefore);
 
-    let breakString = `@Break(${codeMemberName || ""})`;
-    
-    if (codeMemberName) {
-        // 4. Search the ENTIRE document to count existing breaks for numbering.
-        const fullText = editor.document.getText();
-        
-        // Find breaks specific to this Code Member: @Break(Name-XX)
-        // We capture the number group (XX)
-        const breakCounterRegex = new RegExp(
-            `@Break\\(${codeMemberName}-(\\d+)\\)`,
-            "g"
-        );
-        const breakMatches = fullText.match(breakCounterRegex);
+  // 3. Find the nearest preceding Code Member name.
+  // The 'g' (global) flag is fine, but we need to ensure the LAST match is retrieved.
+  const nameRegex = /^:Code\s+(\w+)/gm;
+  let nameMatches = textBeforeCursor.match(nameRegex);
 
-        // 5. Calculate the next number.
-        // We need the number of matches found + 1.
-        const count = breakMatches ? breakMatches.length : 0;
-        const nextNumber = String(count + 1).padStart(2, "0"); // Formats "1" as "01"
+  let codeMemberName = "";
+  if (nameMatches && nameMatches.length > 0) {
+    // Take the LAST match (the nearest one above the cursor).
+    const lastMatch = nameMatches[nameMatches.length - 1];
+    // Extract the name: match[1] in the regex is the name itself.
+    // We use split here, as that was your original logic for extracting the name:
+    codeMemberName = lastMatch.split(/\s+/)[1];
+  }
 
-        // 6. Build the final string.
-        breakString = `@Break(${codeMemberName}-${nextNumber})`;
-    } 
-    
-    // --- 7. Perform the Insertion ---
-    // Use editBuilder.insert() to add the string at the cursor position.
-    editor.edit(editBuilder => {
-        editBuilder.insert(cursorPosition, breakString);
-    });
+  let breakString = `@Break(${codeMemberName || ""})`;
+
+  if (codeMemberName) {
+    // 4. Search the ENTIRE document to count existing breaks for numbering.
+    const fullText = editor.document.getText();
+
+    // Find breaks specific to this Code Member: @Break(Name-XX)
+    // We capture the number group (XX)
+    const breakCounterRegex = new RegExp(
+      `@Break\\(${codeMemberName}-(\\d+)\\)`,
+      "g"
+    );
+    const breakMatches = fullText.match(breakCounterRegex);
+
+    // 5. Calculate the next number.
+    // We need the number of matches found + 1.
+    const count = breakMatches ? breakMatches.length : 0;
+    const nextNumber = String(count + 1).padStart(2, "0"); // Formats "1" as "01"
+
+    // 6. Build the final string.
+    breakString = `@Break(${codeMemberName}-${nextNumber})`;
+  }
+
+  // --- 7. Perform the Insertion ---
+  // Use editBuilder.insert() to add the string at the cursor position.
+  editor.edit((editBuilder) => {
+    editBuilder.insert(cursorPosition, breakString);
+  });
+}
+
+function removeAllBreaks() {
+  // get the active text editor
+  const editor = vscode.window.activeTextEditor;
+
+  // if no editor is open, then cancel out
+  if (!editor) {
+    vscode.window.showInformationMessage("No active text editor found.");
+    return;
+  }
+
+  // get the document and then the full text from it
+  const document = editor.document;
+  const fullText = document.getText();
+
+  // setup the regex to look for the breaks in the file
+  const regex = /@Break\(.*?\)/g; // g means global replacement
+
+  // use the regex to remove all breaks
+  const newText = fullText.replace(regex, "");
+
+  // check if anything was actually changed (i.e. the before and after text are the same)
+  if (newText === fullText) {
+    vscode.window.showInformationMessage("No @Break() instances found.");
+    return;
+  }
+
+  // apply the edits to the program
+  editor.edit((editBuilder) => {
+    // Create a range spanning the *entire* document
+    const start = new vscode.Position(0, 0);
+    const end = new vscode.Position(
+      document.lineCount - 1,
+      document.lineAt(document.lineCount - 1).text.length
+    );
+    const fullRange = new vscode.Range(start, end);
+
+    // replace the content of the range with the new text (everything without the breaks)
+    editBuilder.replace(fullRange, newText);
+  });
 }
 
 module.exports = {

@@ -25,6 +25,9 @@ Quickly rename single letter variables to modern format within the highlighted c
 ### Add a Break
 Quickly add a break in the position where the cursor is. The name of the Break will be automatically named with the code member name and a number (-01, -02, etc)
 
+### Remove All Breaks
+Quickly removes all breaks in the file. Note: If a break is on its own line, the Break will be removed, but the blank line will remain behind
+
 ## Requirements
 
 This extension assumes a workspace setup for MAT development. It is primarily intended for use on files with the `.focus` extension, as configured in the context menus.
